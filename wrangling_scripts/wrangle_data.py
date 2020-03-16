@@ -90,7 +90,7 @@ def return_figures():
             )
     
     layout_one = dict(title = 'Confirmed Cases | Top 15 Countries',
-                      xaxis = dict(title = 'Country',),
+                      #xaxis = dict(title = 'Country',),
                       yaxis = dict(title = 'Cases'),
                       separators = ',.',
                       )
@@ -113,7 +113,7 @@ def return_figures():
             )
     
     layout_two = dict(title = 'Fatal Cases | Top 15 Countries',
-                      xaxis = dict(title = 'Country',),
+                      #xaxis = dict(title = 'Country',),
                       yaxis = dict(title = 'Deaths'),
                       separators = ',.',
                       )
@@ -169,7 +169,7 @@ def return_figures():
                 )
 
     layout_three = dict(title = 'Infections per Day <br>Top 12 Countries by most infections in last 7 days',
-                xaxis = dict(title = 'Date',
+                xaxis = dict(#title = 'Date',
                     autotick=True),
                 yaxis = dict(title = 'Cases'),
                 separators = ',.',
