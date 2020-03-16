@@ -1,6 +1,6 @@
 # Flask App providing interactive Dashboard about COVID-19 cases
 
-This project inhabitates the code for the flask app providing a dashboard with graphs on
+This project inhabitates the code for the flask app providing a dashboard with graphs about corona virus (COVID-19) cases:
 * Confirmed Cases per Country (bar chart)
 * Deaths per Country (bar chart)
 * New Infections per Day per Country (line chart)
