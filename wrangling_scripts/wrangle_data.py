@@ -151,7 +151,7 @@ def return_figures():
         countrylist.append(key)
     countrylist = countrylist[:12]
 
-    datelist = df_new.columns[4:].tolist()
+    datelist = df_new.columns[-28:].tolist()    # last 28 days
 
     # Create graph
     for country in countrylist:
@@ -168,7 +168,7 @@ def return_figures():
                     name = country)
                 )
 
-    layout_three = dict(title = 'New Infections | Top 15 Countries (last 7 days)',
+    layout_three = dict(title = 'Infections per Day <br>Top 12 Countries by most infections in last 7 days',
                 xaxis = dict(title = 'Date',
                     autotick=True),
                 yaxis = dict(title = 'Cases'),
@@ -179,7 +179,7 @@ def return_figures():
     # 4. Graph: Scatter confirmed cases vs. deaths
     graph_four = []
     
-    # Create countrylist with top 10 countries by total cases
+    # Create countrylist with top countries by total cases
     countrylist = []
     count = 0
     for key, value in sorted(cases.items(), key=lambda item: item[1], reverse=True):
@@ -204,11 +204,60 @@ def return_figures():
                     )
                 )
 
-    layout_four = dict(title = 'Deaths & Confirmed Cases',
+    layout_four = dict(title = 'Confirmed Cases & Deaths <br>Top 12 Countries by total cases',
                 xaxis = dict(title = 'Deaths'),
                 yaxis = dict(title = 'Cases'),
                 separators = ',.',
                 )
+
+
+    # 5. Graph: Bubble map with confirmed cases per country
+    graph_five = []
+
+    #location_cases = []
+    for latitude in df_confirmed['Lat']:
+        df_lat = df_confirmed[df_confirmed['Lat'] == latitude]
+        df_death_lat = df_death[df_death['Lat'] == latitude]
+        for longitude in df_lat['Long']:
+            cases = df_lat[last_col_confirmed][df_lat['Long'] == longitude].sum()
+            deaths = df_death[last_col_death][df_death['Long'] == longitude].sum() 
+            if cases > 0:
+                bubble_text = (
+                        str(df_lat['Country/Region'][df_lat['Long'] == longitude].unique().tolist()[0]) + ', ' 
+                        + str(df_lat['Province/State'][df_lat['Long'] == longitude].unique().tolist()[0]) 
+                        + '<br>Cases:  ' + str(cases)
+                        + '<br>Deaths: ' + str(deaths)
+                        )
+                graph_five.append(
+                        go.Scattergeo(
+                            locationmode = 'country names', #USA-states',
+                            lat = [latitude],
+                            lon = [longitude],
+                            text = bubble_text,
+                            marker = dict(
+                                size = cases/1000,
+                                #color = ,
+                                line_color = 'rgb(40, 40, 40)',
+                                line_width = 0.5,
+                                sizemode = 'area'
+                                )
+                            #, name = 
+                            )
+                        )
+            else:
+                break
+    
+    layout_five = dict(title = 'Confirmed Cases & Deaths | Bubble Map (all cases)',
+                      showlegend = False,
+                      geo = dict(
+                          projection = dict(type = 'natural earth'),
+                          showland = True,
+                          landcolor = 'rgb(217, 217, 217)',
+                          showocean = True,
+                          oceancolor = 'rgb(204,229,255)',
+                          showcountries = True
+                          )
+                      )
 
 
     # Append all charts to the figures list
@@ -217,6 +266,7 @@ def return_figures():
     figures.append(dict(data=graph_two, layout=layout_two))
     figures.append(dict(data=graph_three, layout=layout_three))
     figures.append(dict(data=graph_four, layout=layout_four))
+    figures.append(dict(data=graph_five, layout=layout_five))
        
     return figures
 
