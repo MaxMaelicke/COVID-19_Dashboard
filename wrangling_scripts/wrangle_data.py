@@ -222,12 +222,19 @@ def return_figures():
             cases = df_lat[last_col_confirmed][df_lat['Long'] == longitude].sum()
             deaths = df_death[last_col_death][df_death['Long'] == longitude].sum() 
             if cases > 0:
-                bubble_text = (
-                        str(df_lat['Country/Region'][df_lat['Long'] == longitude].unique().tolist()[0]) + ', ' 
-                        + str(df_lat['Province/State'][df_lat['Long'] == longitude].unique().tolist()[0]) 
-                        + '<br>Cases:  ' + str(cases)
-                        + '<br>Deaths: ' + str(deaths)
-                        )
+                if str(df_lat['Province/State'][df_lat['Long'] == longitude].unique().tolist()[0]) == 'nan':
+                    bubble_text = (
+                            str(df_lat['Country/Region'][df_lat['Long'] == longitude].unique().tolist()[0]) 
+                            + '<br>Cases:  ' + str(cases)
+                            + '<br>Deaths: ' + str(deaths)
+                            )
+                else:
+                    bubble_text = (
+                            str(df_lat['Country/Region'][df_lat['Long'] == longitude].unique().tolist()[0]) + ', '
+                            + str(df_lat['Province/State'][df_lat['Long'] == longitude].unique().tolist()[0])
+                            + '<br>Cases:  ' + str(cases)
+                            + '<br>Deaths: ' + str(deaths)
+                            )
                 graph_five.append(
                         go.Scattergeo(
                             locationmode = 'country names', #USA-states',
@@ -253,8 +260,8 @@ def return_figures():
                           projection = dict(type = 'natural earth'),
                           showland = True,
                           landcolor = 'rgb(217, 217, 217)',
-                          showocean = True,
-                          oceancolor = 'rgb(204,229,255)',
+                          #showocean = True,
+                          #oceancolor = 'rgb(204,229,255)',
                           showcountries = True
                           )
                       )
