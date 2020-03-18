@@ -207,8 +207,8 @@ def return_figures():
             break
 
     for country in countrylist:
-        x = [deaths[country]]
-        y = [cases[country]]
+        x = [cases[country]]
+        y = [deaths[country]]
         #text = str(country) + ' ' + str(x) + '/' + str(y)
         graph_four.append(
                 go.Scatter(
@@ -222,8 +222,8 @@ def return_figures():
                 )
 
     layout_four = dict(title = 'Confirmed Cases & Deaths <br>Top 12 Countries by total cases',
-                xaxis = dict(title = 'Deaths'),
-                yaxis = dict(title = 'Cases'),
+                xaxis = dict(title = 'Cases'),
+                yaxis = dict(title = 'Deaths'),
                 separators = ',.',
                 )
 
