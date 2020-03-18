@@ -58,7 +58,7 @@
 
                     <h3 id="tag-line">COVID-19 Dashboard</h3>
                     <h5 id="tag-line" class="text-muted">Data as of {{asof}} (collected by Johns Hopkins University)</h5>
-		    <p class="text-muted">-- for desktop use only --</p>
+		    <p class="text-muted">-- for desktop use only | updated once per night --</p>
 
                 </div>
 
@@ -103,16 +103,21 @@
                     </div>
 
 
+		    <!-- table -->
+		        {{ table|safe }}
+
                 </div>
             <div>
         </div>
 
         <!--footer section-->
 	<ul></ul>
+	<ul></ul>
         <div id="footer" class="container">
           <p>The data is collected from several sources (which do not always agree) by Johns Hopkins University and updated once a day. It can be accressed via their
             <a href="https://github.com/CSSEGISandData/COVID-19" target="_blank">
-            Github repository<a/>.</p>
+            Github repository</a>.</p>
+          <p>Population data is provided by the <a href="https://datacatalog.worldbank.org/dataset/world-development-indicators" target="_blank">World Bank</a>.</p>
 
         </div>
 

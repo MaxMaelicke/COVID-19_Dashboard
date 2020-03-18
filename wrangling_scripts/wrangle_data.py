@@ -1,9 +1,12 @@
+# Import libraries
 import pandas as pd
 import plotly.graph_objs as go
 from collections import Counter
 from collections import defaultdict
 import datetime
 import numpy as np
+from pycountry import countries
+import pickle
 
 
 def return_figures():
@@ -11,7 +14,7 @@ def return_figures():
     Input:    None
     Output:   list (dict): list containing the plotly visualizations
     '''
-
+    # Load Johns Hopkins University Data
     url_confirmed = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv'
     url_death = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv'
     url_recovered = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv'
@@ -19,6 +22,10 @@ def return_figures():
     df_confirmed = pd.read_csv(url_confirmed, error_bad_lines=False)
     df_death = pd.read_csv(url_death, error_bad_lines=False)
     df_recovered = pd.read_csv(url_recovered, error_bad_lines=False)
+
+    # Load population data from the World Bank
+    df_pop_2018 = pd.read_pickle('covidapp/data/df_pop_2018.pkl')
+    df_pop_2018 = df_pop_2018.drop(['Country Name'], axis = 1)
     
     #df_confirmed.to_pickle('data/covid-19_confirmed.pkl')
     #df_death.to_pickle('data/covid-19_death.pkl')
@@ -30,12 +37,12 @@ def return_figures():
     for i in range(len(df_confirmed)):
         cases[df_confirmed['Country/Region'][i]] += df_confirmed[last_col_confirmed][i]
     
-    
     last_col_death = df_death.columns[-1]
     
     deaths = defaultdict(int)
     for i in range(len(df_death)):
         deaths[df_death['Country/Region'][i]] += df_death[last_col_death][i]
+    
     
     '''
     # Gruppiertes Balkendiagramm
@@ -81,6 +88,11 @@ def return_figures():
     for key, value in sorted(cases.items(), key=lambda item: item[1], reverse=True):
         x.append(key)
         y.append(value)
+
+    # Create dataframe for later
+    df_country_cases = {'Country/Region': x, 'Cases': y}
+    df_country_cases = pd.DataFrame(df_country_cases)
+
     x = x[0:15]
     y = y[0:15]
     
@@ -103,6 +115,11 @@ def return_figures():
     for key, value in sorted(deaths.items(), key=lambda item: item[1], reverse=True):
         x.append(key)
         y.append(value)
+
+    # Create dataframe for later
+    df_country_deaths = {'Country/Region': x, 'Deaths': y}
+    df_country_deaths = pd.DataFrame(df_country_deaths)
+
     x = x[0:15]
     y = y[0:15]
     
@@ -214,23 +231,25 @@ def return_figures():
     # 5. Graph: Bubble map with confirmed cases per country
     graph_five = []
 
-    #location_cases = []
+    #cases_deaths = []
     for latitude in df_confirmed['Lat']:
         df_lat = df_confirmed[df_confirmed['Lat'] == latitude]
         df_death_lat = df_death[df_death['Lat'] == latitude]
         for longitude in df_lat['Long']:
             cases = df_lat[last_col_confirmed][df_lat['Long'] == longitude].sum()
             deaths = df_death[last_col_death][df_death['Long'] == longitude].sum() 
+            country_name = str(df_lat['Country/Region'][df_lat['Long'] == longitude].unique().tolist()[0])
+            #cases_deaths.append([country, cases, deaths])
             if cases > 0:
                 if str(df_lat['Province/State'][df_lat['Long'] == longitude].unique().tolist()[0]) == 'nan':
                     bubble_text = (
-                            str(df_lat['Country/Region'][df_lat['Long'] == longitude].unique().tolist()[0]) 
+                            country_name 
                             + '<br>Cases:  ' + str(cases)
                             + '<br>Deaths: ' + str(deaths)
                             )
                 else:
                     bubble_text = (
-                            str(df_lat['Country/Region'][df_lat['Long'] == longitude].unique().tolist()[0]) + ', '
+                            country_name + ', '
                             + str(df_lat['Province/State'][df_lat['Long'] == longitude].unique().tolist()[0])
                             + '<br>Cases:  ' + str(cases)
                             + '<br>Deaths: ' + str(deaths)
@@ -267,6 +286,55 @@ def return_figures():
                       )
 
 
+    # 6. Graph: Colored Map (Chroropleth Map) with Cases / Population
+    # Create dataframe with population, cases and death columns
+
+    # Match Country Names with Pycountry library
+    no_pycountry = []
+    matched_country_dict = defaultdict(str)
+
+    manual_country_dict = {
+            'Brunei' : 'BRN',
+            'Congo (Brazzaville)' : 'COG',
+            'Congo (Kinshasa)' : 'COD',
+            "Cote d'Ivoire" : 'CIV',
+            'Holy See' : 'VAT',
+            'Iran' : 'IRN',
+            'Korea, South' : 'KOR',
+            'Kosovo' : 'UNK',
+            'Reunion' : 'REU',
+            'Russia' : 'RUS',
+            'Taiwan*' : 'TWN',
+            'The Bahamas' : 'BHS',
+            'occupied Palestinian territory' : 'PSE'
+            }
+
+
+    for country in df_confirmed['Country/Region'].drop_duplicates().sort_values():
+        try:
+            matched_country_dict[country] = countries.lookup(country).alpha_3
+        except:
+            try:
+                matched_country_dict[country] = manual_country_dict[country]
+            except:
+                #print(country, ' not found')
+                no_pycountry.append(country)
+    
+    # Create Dataframe with cases, deaths and population
+    df_cases_deaths = df_country_cases.copy()
+    df_cases_deaths = df_cases_deaths.merge(df_country_deaths, on = 'Country/Region')
+    df_cases_deaths['Country Code'] = df_cases_deaths['Country/Region'].apply(lambda x: matched_country_dict[x])
+    df_cases_deaths = df_cases_deaths.merge(df_pop_2018, on = 'Country Code')
+    df_cases_deaths.columns = ['Country/Region',  'Cases',  'Deaths', 'Country Code', 'Population']
+
+    # Calculate ratios
+    df_cases_deaths['Mortality Rate'] = df_cases_deaths['Deaths'] / df_cases_deaths['Cases'] * 100
+    df_cases_deaths['Cases / Population'] = df_cases_deaths['Cases'] / df_cases_deaths['Population'] * 100
+
+    # Drop unneeded columns & save to pickle
+    df_cases_deaths.drop(['Country Code', 'Population'], axis = 1).to_pickle('covidapp/data/df_cases_deaths.pkl')
+
+
     # Append all charts to the figures list
     figures = []
     figures.append(dict(data=graph_one, layout=layout_one))
@@ -274,11 +342,14 @@ def return_figures():
     figures.append(dict(data=graph_three, layout=layout_three))
     figures.append(dict(data=graph_four, layout=layout_four))
     figures.append(dict(data=graph_five, layout=layout_five))
-       
+
     return figures
 
 
 def return_last_date():
+    '''
+    Returns the last date of the confirmed, death and recovered data respectively by comparing the title of the last column
+    '''
 
     url_confirmed = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv'
     url_recovered = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv'
@@ -295,3 +366,13 @@ def return_last_date():
     last_date = max(date_cases, date_recovered, date_deaths)
 
     return last_date
+
+
+def return_table():
+    '''
+    Returns a table in HTML format with ratios and figures per country.
+    '''
+    
+    html_table = None
+
+    return html_table

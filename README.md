@@ -59,4 +59,4 @@ Setup webserver and link to app location.
 ## Acknowledgments
 
 Many thanks to **Johns Hopkins University** for collecting the data and making it accessable on Github (https://github.com/CSSEGISandData/COVID-19).
-
+Population data is provided by the World Bank.
