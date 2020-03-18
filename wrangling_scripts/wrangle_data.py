@@ -229,6 +229,7 @@ def return_figures():
 
 
     # 5. Graph: Bubble map with confirmed cases per country
+    '''
     graph_five = []
 
     #cases_deaths = []
@@ -284,7 +285,7 @@ def return_figures():
                           showcountries = True
                           )
                       )
-
+    '''
 
     # 6. Graph: Colored Map (Chroropleth Map) with Cases / Population
     # Create dataframe with population, cases and death columns
@@ -328,11 +329,61 @@ def return_figures():
     df_cases_deaths.columns = ['Country/Region',  'Cases',  'Deaths', 'Country Code', 'Population']
 
     # Calculate ratios
-    df_cases_deaths['Mortality Rate'] = df_cases_deaths['Deaths'] / df_cases_deaths['Cases'] * 100
-    df_cases_deaths['Cases / Population'] = df_cases_deaths['Cases'] / df_cases_deaths['Population'] * 100
+    df_cases_deaths['Mortality Rate'] = df_cases_deaths['Deaths'] / df_cases_deaths['Cases'] * 100           # percentage
+    df_cases_deaths['Cases / Population'] = df_cases_deaths['Cases'] / df_cases_deaths['Population'] * 100   # percentage
+    df_cases_deaths['Infection Rate'] = df_cases_deaths['Cases'] / df_cases_deaths['Population'] * 10000
 
-    # Drop unneeded columns & save to pickle
-    df_cases_deaths.drop(['Country Code', 'Population'], axis = 1).to_pickle('covidapp/data/df_cases_deaths.pkl')
+    # Drop unneeded columns & save to pickle (pickle will be used to show HTML table)
+    df_cases_deaths.drop(['Country Code', 'Population', 'Infection Rate'], axis = 1).to_pickle('covidapp/data/df_cases_deaths.pkl')
+
+    # Create Choropleth Map
+    graph_six = []
+
+    text = []
+    for country in df_cases_deaths['Country/Region']:
+        text.append(str(
+            str(country)
+            + '<br> Cases: ' + '{:,}'.format(df_cases_deaths['Cases'][df_cases_deaths['Country/Region'] == country].tolist()[0]).replace(',', '.')
+            + '<br> Deaths: ' + '{:,}'.format(df_cases_deaths['Deaths'][df_cases_deaths['Country/Region'] == country].tolist()[0]).replace(',', '.')
+            + '<br> Mortality Rate: ' + '{:,.2f}'.format(df_cases_deaths['Mortality Rate'][df_cases_deaths['Country/Region'] == country].tolist()[0]).replace(',', '.') + ' %'
+            + '<br> Cases / Population: ' + '{:,.3f}'.format(df_cases_deaths['Cases / Population'][df_cases_deaths['Country/Region'] == country].tolist()[0]).replace(',', '.') + ' %'
+            )
+        )
+
+    graph_six.append(
+                go.Choropleth(
+                    locations = df_cases_deaths['Country Code'],
+                    z = df_cases_deaths['Infection Rate'],
+                    #colorscale = 'Reds',
+                    colorscale = ['#f9ebea',
+                        #'#f2d7d5',
+                        #'#e6b0aa',
+                        '#cd6155',
+                        '#c0392b',
+                        '#a93226',
+                        '#922b21',
+                        '#7b241c',
+                        '#641e16'],
+                    autocolorscale = False,
+                    showscale = False,
+                    #colorbar_title = 'Cases / Population'
+                    text = text,
+                    hoverinfo = 'text',
+                    hoverlabel = dict(
+                        bgcolor = ' #ebedef')
+                    )
+                )
+
+    layout_six = dict(title = 'Most Affected Countries (Cases / Population)',
+            showlegend = False,
+            showcolorbar = False,
+            geo = dict(
+                projection = dict(type = 'natural earth'),
+                showframe = True,
+                #showcoastline = False,
+                showcountries = True
+                )
+            )
 
 
     # Append all charts to the figures list
@@ -341,7 +392,8 @@ def return_figures():
     figures.append(dict(data=graph_two, layout=layout_two))
     figures.append(dict(data=graph_three, layout=layout_three))
     figures.append(dict(data=graph_four, layout=layout_four))
-    figures.append(dict(data=graph_five, layout=layout_five))
+    #figures.append(dict(data=graph_five, layout=layout_five))
+    figures.append(dict(data=graph_six, layout=layout_six))
 
     return figures
 
