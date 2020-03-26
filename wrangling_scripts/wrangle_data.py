@@ -407,19 +407,16 @@ def return_last_date():
     Returns the last date of the confirmed, death and recovered data respectively by comparing the title of the last column
     '''
 
-    url_confirmed = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv'
-    url_recovered = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv'
-    url_death = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv'
+    url_confirmed = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'
+    url_death = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv'
 
     df_confirmed = pd.read_csv(url_confirmed, error_bad_lines=False)
     df_death = pd.read_csv(url_death, error_bad_lines=False)
-    df_recovered = pd.read_csv(url_recovered, error_bad_lines=False)
 
     date_cases = datetime.datetime.strptime(df_confirmed.columns[-1], '%m/%d/%y').date()
-    date_recovered = datetime.datetime.strptime(df_recovered.columns[-1], '%m/%d/%y').date()
     date_deaths = datetime.datetime.strptime(df_death.columns[-1], '%m/%d/%y').date()
 
-    last_date = max(date_cases, date_recovered, date_deaths)
+    last_date = max(date_cases, date_deaths)
 
     return last_date
 
